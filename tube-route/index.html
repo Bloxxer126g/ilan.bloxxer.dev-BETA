@@ -70,7 +70,15 @@ input[type=text]::placeholder{color:#6f8a7b}
 .ac-item{padding:11px 14px;font-size:14px;border-radius:12px;color:var(--ink2)}
 .ac-item:hover,.ac-item.selected{background:var(--blue-soft);color:var(--blue)}
 .ac-item .ac-zone{float:right;font-size:12px;color:var(--mut)}
-.ac-item .ac-line{font-size:12px;color:var(--mut);margin-top:2px}
+.ac-item .ac-line{font-size:12px;color:var(--mut);margin-top:2px;clear:both}
+.check-row{grid-column:1/-1;display:flex;align-items:center;gap:12px;font-size:14px;color:var(--ink2);user-select:none}
+.check-row em{font-style:normal;color:var(--mut)}
+.check-row input{position:absolute;opacity:0;pointer-events:none}
+.check-box{width:22px;height:22px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);display:grid;place-items:center;flex-shrink:0;transition:background .2s,border-color .2s}
+.check-row:hover .check-box{border-color:var(--blue)}
+.check-row input:checked+.check-box{background:var(--blue);border-color:var(--blue)}
+.check-row input:checked+.check-box::after{content:'';width:5px;height:10px;border:solid var(--onacc);border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.check-row input:focus-visible+.check-box{outline:2px solid var(--blue);outline-offset:3px}
 .btn-plan{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;background:var(--blue);color:var(--onacc);font:600 16px var(--disp);border-radius:999px;padding:10px 10px 10px 30px}
 .btn-plan .arr{width:44px;height:44px;font-size:18px}
 .btn-plan:hover{background:var(--accHi)}
@@ -154,6 +162,7 @@ input[type=text]::placeholder{color:#6f8a7b}
 .status-ok{background:#123425;color:var(--blue)}
 .status-warn{background:#3a2a0a;color:#f5c36b}
 .status-err{background:#3a1519;color:#ff8a8e}
+.status-na{background:var(--card2);color:var(--mut)}
 
 #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card2);border:1px solid var(--blue);color:var(--ink);font-size:14px;font-weight:500;padding:12px 24px;border-radius:999px;transition:transform .3s ease;z-index:9999;white-space:nowrap;pointer-events:none}
 #toast.show{transform:translateX(-50%) translateY(0)}
@@ -197,7 +206,7 @@ footer{max-width:1120px;margin:24px auto 0;padding:28px 24px 40px;border-top:1px
 <header class="hero">
   <div class="badge">London Underground planner</div>
   <h1>Plan your <span>route.</span></h1>
-  <p>Enter any two London stations. We query TfL live, find tube-only routes, and show you disruptions in real time.</p>
+  <p>Enter any two London stations. We query TfL live, find Tube and Elizabeth line routes, and show you disruptions in real time.</p>
 </header>
 
 <div class="planner">
@@ -243,6 +252,7 @@ footer{max-width:1120px;margin:24px auto 0;padding:28px 24px 40px;border-top:1px
       <input type="text" id="time-input" placeholder="HH:MM" maxlength="5" inputmode="numeric" autocomplete="off">
     </div>
 
+
     <button class="btn-plan" id="plan-btn" onclick="planJourney()">Plan journey <span class="arr">&rarr;</span></button>
 
     <div class="error-state" id="error-state">
@@ -259,7 +269,7 @@ footer{max-width:1120px;margin:24px auto 0;padding:28px 24px 40px;border-top:1px
 <main class="results" id="results">
   <div class="results-head">
     <div>
-      <div class="results-kicker">Route found</div>
+      <div class="results-kicker" id="results-kicker">Route found</div>
       <div class="results-title" id="results-heading"></div>
     </div>
     <button class="btn-ghost" onclick="resetForm()">&#x21A9; New search</button>
@@ -278,7 +288,7 @@ footer{max-width:1120px;margin:24px auto 0;padding:28px 24px 40px;border-top:1px
 
 <footer>
   Journey data comes live from the TfL Unified API.<br>
-  Tube-only routes are shown, with bus and walking legs filtered where possible.<br>
+  Tube and Elizabeth line routes are shown, with walking links where needed. Buses are left out.<br>
   Always confirm times with Citymapper or the TfL app before you travel.<br>
   ilan.bloxxer.dev &nbsp;|&nbsp; Created with the use of AI &nbsp;|&nbsp; <span class="blink">_</span>
 </footer>
@@ -327,11 +337,38 @@ var LINE_COLOURS={
   'elizabeth':    {bg:'#6950A1',fg:'#fff'},
   'dlr':          {bg:'#00A4A7',fg:'#fff'},
   'overground':   {bg:'#EE7C0E',fg:'#fff'},
+  'tram':         {bg:'#84B817',fg:'#000'},
+  'lioness':      {bg:'#FFA600',fg:'#000'},
+  'mildmay':      {bg:'#0071CE',fg:'#fff'},
+  'windrush':     {bg:'#DC241F',fg:'#fff'},
+  'weaver':       {bg:'#9B0069',fg:'#fff'},
+  'suffragette':  {bg:'#5BB379',fg:'#000'},
+  'liberty':      {bg:'#61686B',fg:'#fff'},
+  'thameslink':   {bg:'#E9438A',fg:'#fff'},
+  'southern':     {bg:'#8CC63E',fg:'#000'},
+  'southeastern': {bg:'#389CFF',fg:'#000'},
+  'great-northern':{bg:'#8B3A9A',fg:'#fff'},
+  'c2c':          {bg:'#B7007C',fg:'#fff'},
+  'chiltern':     {bg:'#00A0E2',fg:'#000'},
+  'greater-anglia':{bg:'#D70428',fg:'#fff'},
+  'gatwick-express':{bg:'#EE2737',fg:'#fff'},
+  'heathrow-express':{bg:'#532E63',fg:'#fff'},
+  'south-western-railway':{bg:'#24398C',fg:'#fff'},
+  'london-northwestern-railway':{bg:'#00BF6F',fg:'#000'}
 };
+// when a line isn't listed, colour it by the kind of service it is
+var MODE_COLOURS={
+  'national-rail':{bg:'#9FB3C8',fg:'#04130b'},
+  'tube':{bg:'#9FB3C8',fg:'#04130b'},
+  'overground':{bg:'#EE7C0E',fg:'#fff'},
+  'dlr':{bg:'#00A4A7',fg:'#fff'},
+  'tram':{bg:'#84B817',fg:'#000'},
+  'elizabeth-line':{bg:'#6950A1',fg:'#fff'}
+};
+var modeOfLine={}; // line id -> the mode TfL says it runs as, filled in from the journey legs
 
 function lineColour(id){
-  var c=LINE_COLOURS[id]||{bg:'#5ee3a130',fg:'#5ee3a1'};
-  return c;
+  return LINE_COLOURS[id]||MODE_COLOURS[modeOfLine[id]]||{bg:'#5ee3a1',fg:'#04130b'};
 }
 
 function lineName(id){
@@ -340,9 +377,13 @@ function lineName(id){
     'district':'District','hammersmith-city':'Hammersmith & City',
     'jubilee':'Jubilee','metropolitan':'Metropolitan','northern':'Northern',
     'piccadilly':'Piccadilly','victoria':'Victoria','waterloo-city':'Waterloo & City',
-    'elizabeth':'Elizabeth','dlr':'DLR','overground':'Overground'
+    'elizabeth':'Elizabeth line','dlr':'DLR','overground':'Overground','tram':'London Trams',
+    'thameslink':'Thameslink','southern':'Southern','southeastern':'Southeastern','great-northern':'Great Northern',
+    'c2c':'c2c','chiltern':'Chiltern Railways','greater-anglia':'Greater Anglia','gatwick-express':'Gatwick Express',
+    'heathrow-express':'Heathrow Express','south-western-railway':'South Western Railway',
+    'london-northwestern-railway':'London Northwestern Railway'
   };
-  return names[id]||(id.charAt(0).toUpperCase()+id.slice(1));
+  return names[id]||id.split('-').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join(' ');
 }
 
 // ─── TfL fetch: 12s timeout, retries on network errors, rate limits (429) and server errors (5xx) ───
@@ -376,7 +417,7 @@ function setupAC(inputId,acId){
   var selIdx=-1;
 
   inp.addEventListener('input',function(){
-    delete inp.dataset.naptan; // typing again invalidates the station picked earlier
+    delete inp.dataset.naptan; delete inp.dataset.ids; // typing again invalidates the station picked earlier
     clearTimeout(acTimers[inputId]);
     var q=inp.value.trim();
     if(q.length<2){ac.innerHTML='';ac.classList.remove('open');return;}
@@ -401,7 +442,7 @@ function highlight(items,idx){
 }
 
 function fetchAC(q,ac,inp){
-  tflFetch('https://api.tfl.gov.uk/StopPoint/Search/'+encodeURIComponent(q)+'?modes=tube,elizabeth-line,overground,dlr&maxResults=6',2)
+  tflFetch('https://api.tfl.gov.uk/StopPoint/Search/'+encodeURIComponent(q)+'?modes=tube,elizabeth-line&maxResults=8',2)
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(data){
       if(inp.value.trim()!==q)return; // a newer search has replaced this one
@@ -412,10 +453,14 @@ function fetchAC(q,ac,inp){
         var div=document.createElement('div');
         div.className='ac-item';
         var zone=m.zone?'Z'+m.zone:'';
-        div.innerHTML='<span>'+escH(m.name)+'</span><span class="ac-zone">'+escH(zone)+'</span>';
+        var MODE_LBL={'tube':'Tube','national-rail':'National Rail','elizabeth-line':'Elizabeth line','overground':'Overground','dlr':'DLR','tram':'Tram'};
+        var kinds=(m.modes||[]).map(function(x){return MODE_LBL[x];}).filter(Boolean).join(', ');
+        div.innerHTML='<span>'+escH(m.name)+'</span><span class="ac-zone">'+escH(zone)+'</span>'+(kinds?'<div class="ac-line">'+escH(kinds)+'</div>':'');
         div.addEventListener('click',function(){
           inp.value=m.name;
+          // Keep every id TfL gave for this station. The journey request tries the station-wide hub id first (it covers Tube and rail platforms) and falls back to the others if TfL rejects it.
           inp.dataset.naptan=m.id;
+          inp.dataset.ids=JSON.stringify(idList(m));
           ac.innerHTML='';ac.classList.remove('open');
         });
         ac.appendChild(div);
@@ -423,6 +468,14 @@ function fetchAC(q,ac,inp){
       ac.classList.add('open');
     })
     .catch(function(){ac.classList.remove('open');});
+}
+
+function idList(m){
+  var out=[];
+  // The station's full name goes first: TfL resolves an exact station name reliably, whereas the stop id on its own has been refused.
+  if(m.name)out.push(String(m.name));
+  if(m.id)out.push(String(m.id));
+  return out;
 }
 
 function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -666,6 +719,22 @@ var currentJourneys=[];
 var activeTab=0;
 var linesUsed=[];
 
+function resolvePlace(inputId,text){
+  var inp=document.getElementById(inputId);
+  if(inp.dataset.ids)return Promise.resolve(JSON.parse(inp.dataset.ids));
+  return tflFetch('https://api.tfl.gov.uk/StopPoint/Search/'+encodeURIComponent(text)+'?modes=tube,elizabeth-line&maxResults=8',2)
+    .then(function(r){if(!r.ok){var e=new Error('HTTP '+r.status);e.status=r.status;throw e;}return r.json();})
+    .then(function(d){
+      var ms=d.matches||[];
+      if(!ms.length){var e=new Error('not found');e.status=404;throw e;}
+      var norm=function(s){return s.toLowerCase().replace(/\b(underground|rail|dlr|tram|station|stop)\b/g,'').replace(/[^a-z0-9]+/g,' ').trim();};
+      var want=norm(text);
+      var exact=ms.filter(function(m){return norm(m.name)===want;});
+      var pick=(exact.length?exact:ms)[0];
+      return idList(pick);
+    });
+}
+
 function planJourney(){
   var fromVal=document.getElementById('from-input').value.trim();
   var toVal=document.getElementById('to-input').value.trim();
@@ -683,9 +752,14 @@ function planJourney(){
   var fromEnc=document.getElementById('from-input').dataset.naptan||encodeURIComponent(fromVal);
   var toEnc=document.getElementById('to-input').dataset.naptan||encodeURIComponent(toVal);
 
-  function journeyURL(f,t){
-    return 'https://api.tfl.gov.uk/Journey/JourneyResults/'+f+'/to/'+t
-      +'?date='+dateRaw+'&time='+timeRaw
+  // TfL answers "No journey found" when it dislikes some part of the request, so we step down through simpler versions:
+  // 0 full search, 1 fewer options, 2 no date or time (leave now). Always Tube, Elizabeth line and walking only.
+  var variantUsed=0;
+  function journeyURL(f,t,v){
+    var base='https://api.tfl.gov.uk/Journey/JourneyResults/'+f+'/to/'+t;
+    if(v===2)return base+'?mode=tube,elizabeth-line,walking';
+    if(v===1)return base+'?date='+dateRaw+'&time='+timeRaw+'&timeIs=Departing&mode=tube,elizabeth-line,walking';
+    return base+'?date='+dateRaw+'&time='+timeRaw
       +'&timeIs=Departing'
       +'&mode=tube,elizabeth-line,walking'
       +'&walkingSpeed=Average'
@@ -695,38 +769,91 @@ function planJourney(){
   // When a place name is ambiguous TfL answers 300 with a list: take its best match and ask again once.
   function bestOption(dis,current){
     if(!dis||dis.matchStatus!=='list'||!dis.disambiguationOptions||!dis.disambiguationOptions.length)return current;
-    var opts=dis.disambiguationOptions.slice().sort(function(a,b){return (b.matchQuality||0)-(a.matchQuality||0);});
+    var opts=dis.disambiguationOptions.filter(function(o){return o.place&&/StopPoint/i.test(o.place.placeType||'');})
+      .sort(function(a,b){return (b.matchQuality||0)-(a.matchQuality||0);});
+    if(!opts.length)return current; // no station among the options: don't guess an address
     return encodeURIComponent(opts[0].parameterValue);
   }
-  function request(f,t,canRetry){
-    return tflFetch(journeyURL(f,t)).then(function(r){
+  function request(f,t,canRetry,v){
+    return tflFetch(journeyURL(f,t,v)).then(function(r){
       if(r.status===300){
         return r.json().then(function(d){
-          if(!canRetry)throw new Error('HTTP 300');
-          return request(bestOption(d.fromLocationDisambiguation,f),bestOption(d.toLocationDisambiguation,t),false);
+          if(!canRetry){var amb=new Error('ambiguous');amb.status=404;throw amb;}
+          return request(bestOption(d.fromLocationDisambiguation,f),bestOption(d.toLocationDisambiguation,t),false,v);
         });
       }
-      if(!r.ok){var err=new Error('HTTP '+r.status);err.status=r.status;throw err;}
+      if(!r.ok){
+        return r.json().catch(function(){return {};}).then(function(b){
+          var err=new Error('HTTP '+r.status);err.status=r.status;err.apiMessage=b&&b.message;throw err;
+        });
+      }
       return r.json();
     });
   }
 
-  request(fromEnc,toEnc,true)
+  // A journey only counts if every leg is Tube / Elizabeth line / walking and it really starts and ends at the stations picked.
+  var OK_MODES=['tube','elizabeth-line','walking'];
+  function norm(s){return String(s||'').toLowerCase().replace(/\b(underground|station|dlr|rail)\b/g,'').replace(/[^a-z0-9]+/g,' ').trim();}
+  function sameStop(point,typed){
+    if(!point||!point.commonName)return false;
+    var a=norm(point.commonName),b=norm(typed);
+    return !!a&&!!b&&(a.indexOf(b)>-1||b.indexOf(a)>-1);
+  }
+  function validJourney(j){
+    var legs=j.legs||[];
+    if(!legs.length)return false;
+    for(var k=0;k<legs.length;k++){
+      var m=legs[k].mode&&legs[k].mode.id;
+      if(OK_MODES.indexOf(m)===-1)return false;
+    }
+    return sameStop(legs[0].departurePoint,fromVal)&&sameStop(legs[legs.length-1].arrivalPoint,toVal);
+  }
+
+  // Try the id sets in order; move on when TfL says it can't find the place or has no route for it.
+  function tryRequests(a,b){
+    var n=Math.max(a.length,b.length),i=0,v=0,lastData=null,lastErr=null;
+    function next(){
+      if(i>=n){
+        if(lastData)return lastData;
+        throw lastErr||Object.assign(new Error('not found'),{status:404});
+      }
+      var f=encodeURIComponent(a[Math.min(i,a.length-1)]),t=encodeURIComponent(b[Math.min(i,b.length-1)]);
+      var thisV=v;
+      v++;if(v>2){v=0;i++;}
+      return request(f,t,true,thisV).then(function(d){
+        var ok=(d.journeys||[]).filter(validJourney);
+        if(ok.length){d.journeys=ok;variantUsed=thisV;return d;}
+        lastData={journeys:[]};return next();
+      },function(e){
+        if(e.status===404||e.status===400){lastErr=e;return next();}
+        throw e;
+      });
+    }
+    return next();
+  }
+
+  Promise.all([resolvePlace('from-input',fromVal),resolvePlace('to-input',toVal)])
+    .then(function(c){return tryRequests(c[0],c[1]);})
     .then(function(data){
       hideLoading();
       if(!data.journeys||!data.journeys.length){
-        showError('No tube routes found between these locations. Try station names, or check spelling.');
+        showError('TfL did not return a Tube route between those two stations. Try different stations or another time.');
         return;
       }
       currentJourneys=data.journeys.slice(0,3);
       activeTab=0;
       renderResults(fromVal,toVal);
+      document.getElementById('results-kicker').textContent=[
+        'Route found',
+        'Route found, using simpler search settings',
+        'Route found for right now, because TfL had nothing for the date and time you chose'
+      ][variantUsed];
     })
     .catch(function(e){
       hideLoading();
       var s=e.status;
       if(s===404){
-        showError('Could not find one or both locations. Please try typing a station name from the autocomplete list.');
+        showError('TfL could not plan this journey between those two stations.'+(e.apiMessage?' TfL says: '+e.apiMessage:'')+' Pick Tube stations from the suggestion list.');
       } else if(s===400){
         showError('TfL could not plan that journey. Check the stations, date and time, then try again.');
       } else if(s===429){
@@ -782,6 +909,7 @@ function renderActiveJourney(){
         if(ro.lineIdentifier&&ro.lineIdentifier.id){
           var lid=ro.lineIdentifier.id.toLowerCase();
           if(linesUsed.indexOf(lid)===-1)linesUsed.push(lid);
+          modeOfLine[lid]=(leg.mode&&leg.mode.id)||'';
         }
       });
     }
@@ -846,14 +974,14 @@ function renderActiveJourney(){
       +'<div class="step-name" style="color:'+(mode==='walking'?'var(--text-mid)':'var(--green)')+';">'+escH(depName)+'</div>'
       +'<div class="step-sub">'+dep
         +(mode==='walking'
-          ? ' &mdash; Walk '+leg.duration+' min ('+fmtDist(leg.path)+')'
+          ? ' &mdash; Walk '+leg.duration+' min'
           : ' &mdash; '+escH(lineLbl)+stopsNote+' &mdash; '+leg.duration+' min')
         +'</div>';
 
     if(mode!=='walking'){
       var dir=leg.instruction&&leg.instruction.detailed?leg.instruction.detailed:'';
       if(dir)html+='<div class="step-sub" style="color:var(--text-dim);font-size:10px;margin-top:2px;">'+escH(dir)+'</div>';
-      html+='<span class="step-pill" style="'+pillStyle+'">&#x25CF; '+escH((lineLbl||'Tube'))+'</span>';
+      html+='<span class="step-pill" style="'+pillStyle+'">&#x25CF; '+escH((lineLbl||'Rail'))+'</span>';
     } else {
       html+='<span class="step-pill" style="background:rgba(94,227,161,.08);color:var(--text-mid);border:1px solid var(--border2);">&#x1F6B6; Walk '+leg.duration+' min</span>';
     }
@@ -884,8 +1012,7 @@ function renderActiveJourney(){
 }
 
 function colorHex(lineId){
-  var c=LINE_COLOURS[lineId];
-  return c?c.bg.replace('#',''):'00ff8830';
+  return lineColour(lineId).bg.replace('#','');
 }
 
 function fmtTime(iso){
@@ -901,36 +1028,47 @@ function fmtDist(path){
 }
 
 // ─── Line status for lines used ───────────────────────────────────────────────
-function fetchLineStatus(){
-  if(!linesUsed.length){document.getElementById('lss-rows').innerHTML='<div style="font-size:11px;color:var(--text-dim);padding:8px 0;">No tube lines detected.</div>';return;}
-  var ids=linesUsed.join(',');
-  tflFetch('https://api.tfl.gov.uk/Line/'+encodeURIComponent(ids)+'/Status')
+function getStatus(path){
+  return tflFetch('https://api.tfl.gov.uk'+path)
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
-    .then(function(data){
-      if(!Array.isArray(data))throw new Error('bad data');
-      var html='';
-      data.forEach(function(line){
-        var p=(line.lineStatuses||[])[0]||{};
-        var sn=p.statusSeverityDescription||'Unknown';
-        var reason=p.reason||'';
-        var msg=reason?reason.replace(/^.*?:/,'').trim().split('.')[0]:sn;
-        var ok=sn.toLowerCase().includes('good')||sn.toLowerCase().includes('normal');
-        var warn=!ok&&sn.toLowerCase().includes('minor');
-        var cls=ok?'status-ok':warn?'status-warn':'status-err';
-        var lbl=ok?'Good service':sn;
-        var c=lineColour(line.id.toLowerCase());
-        html+='<div class="lss-row">'
-          +'<div class="lss-dot" style="background:'+c.bg+';"></div>'
-          +'<span class="lss-name">'+escH(lineName(line.id.toLowerCase()))+'</span>'
-          +'<span class="lss-msg">'+escH(msg)+'</span>'
-          +'<span class="lss-badge '+cls+'">'+escH(lbl)+'</span>'
-          +'</div>';
-      });
-      document.getElementById('lss-rows').innerHTML=html||'<div style="font-size:11px;color:var(--text-dim);">No status data.</div>';
-    })
-    .catch(function(){
-      document.getElementById('lss-rows').innerHTML='<div style="font-size:11px;color:var(--red);">Could not fetch line status.</div>';
+    .then(function(d){if(!Array.isArray(d))throw new Error('bad data');return d;});
+}
+function statusRowHtml(id,msg,lbl,cls){
+  var c=lineColour(id);
+  return '<div class="lss-row">'
+    +'<div class="lss-dot" style="background:'+c.bg+';"></div>'
+    +'<span class="lss-name">'+escH(lineName(id))+'</span>'
+    +'<span class="lss-msg">'+escH(msg)+'</span>'
+    +'<span class="lss-badge '+cls+'">'+escH(lbl)+'</span>'
+    +'</div>';
+}
+function lineStatusRow(line){
+  var p=(line.lineStatuses||[])[0]||{};
+  var sn=p.statusSeverityDescription||'Unknown';
+  var reason=p.reason||'';
+  var msg=reason?reason.replace(/^.*?:/,'').trim().split('.')[0]:sn;
+  var ok=sn.toLowerCase().includes('good')||sn.toLowerCase().includes('normal');
+  var warn=!ok&&sn.toLowerCase().includes('minor');
+  return statusRowHtml(line.id.toLowerCase(),msg,ok?'Good service':sn,ok?'status-ok':warn?'status-warn':'status-err');
+}
+function fetchLineStatus(){
+  var box=document.getElementById('lss-rows');
+  if(!linesUsed.length){box.innerHTML='<div style="font-size:14px;color:var(--text-dim);padding:8px 0;">No rail lines detected.</div>';return;}
+  // TfL lines have a status by id. National Rail operators only appear in TfL's national-rail list, and not all of them do.
+  var tflIds=[],nrIds=[];
+  linesUsed.forEach(function(id){(modeOfLine[id]==='national-rail'?nrIds:tflIds).push(id);});
+  var a=tflIds.length?getStatus('/Line/'+encodeURIComponent(tflIds.join(','))+'/Status').catch(function(){return null;}):Promise.resolve([]);
+  var b=nrIds.length?getStatus('/Line/Mode/national-rail/Status').catch(function(){return null;}):Promise.resolve([]);
+  Promise.all([a,b]).then(function(res){
+    var html='';
+    if(res[0]===null){tflIds.forEach(function(id){html+=statusRowHtml(id,'Could not fetch live status','Unavailable','status-na');});}
+    else{res[0].forEach(function(l){html+=lineStatusRow(l);});}
+    nrIds.forEach(function(id){
+      var found=res[1]&&res[1].filter(function(l){return l.id.toLowerCase()===id;})[0];
+      html+=found?lineStatusRow(found):statusRowHtml(id,res[1]===null?'Could not fetch live status':'TfL has no live status for this operator','Not available','status-na');
     });
+    box.innerHTML=html||'<div style="font-size:14px;color:var(--text-dim);">No status data.</div>';
+  });
 }
 
 // ─── UI helpers ───────────────────────────────────────────────────────────────
@@ -954,8 +1092,8 @@ function resetForm(){
   hideResults();hideError();
   document.getElementById('from-input').value='';
   document.getElementById('to-input').value='';
-  delete document.getElementById('from-input').dataset.naptan;
-  delete document.getElementById('to-input').dataset.naptan;
+  delete document.getElementById('from-input').dataset.naptan; delete document.getElementById('from-input').dataset.ids;
+  delete document.getElementById('to-input').dataset.naptan; delete document.getElementById('to-input').dataset.ids;
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
