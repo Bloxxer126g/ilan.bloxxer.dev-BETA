@@ -132,6 +132,7 @@ input[type=text]::placeholder{color:#6f8a7b}
 .jtab{flex:1 1 140px;padding:14px 12px;text-align:center;font-size:13px;color:var(--mut);background:var(--card);border:1px solid var(--line);border-radius:22px}
 .jtab:hover{border-color:var(--blue);color:var(--ink);transform:translateY(-3px)}
 .jtab.active{background:var(--blue);border-color:var(--blue);color:var(--onacc)}
+.jtab-tag{display:block;font-size:11px;font-weight:600;margin-bottom:4px;opacity:.8}
 .jtab .jtab-time{font-family:var(--disp);font-size:20px;font-weight:700;letter-spacing:-.02em;display:block;margin-bottom:2px}
 
 .journey-detail{background:var(--card);border:1px solid var(--line);border-radius:32px;overflow:hidden}
@@ -475,6 +476,7 @@ function idList(m){
   // The station's full name goes first: TfL resolves an exact station name reliably, whereas the stop id on its own has been refused.
   if(m.name)out.push(String(m.name));
   if(m.id)out.push(String(m.id));
+  if(m.icsCode&&/^\d+$/.test(String(m.icsCode)))out.push(String(m.icsCode));
   return out;
 }
 
@@ -794,19 +796,54 @@ function planJourney(){
   // A journey only counts if every leg is Tube / Elizabeth line / walking and it really starts and ends at the stations picked.
   var OK_MODES=['tube','elizabeth-line','walking'];
   function norm(s){return String(s||'').toLowerCase().replace(/\b(underground|station|dlr|rail)\b/g,'').replace(/[^a-z0-9]+/g,' ').trim();}
-  function sameStop(point,typed){
-    if(!point||!point.commonName)return false;
+  function sameStop(point,typed,ids){
+    if(!point)return false;
+    if(point.naptanId&&ids.indexOf(String(point.naptanId))>-1)return true;
+    if(point.icsCode&&ids.indexOf(String(point.icsCode))>-1)return true;
+    // the full station name we resolved (first id in the list) counts as a match too
+    if(ids[0]&&norm(point.commonName)===norm(ids[0]))return true;
+    // names must match exactly once "Underground Station" is ignored, so "Blackfriars Pier" is not "Blackfriars"
     var a=norm(point.commonName),b=norm(typed);
-    return !!a&&!!b&&(a.indexOf(b)>-1||b.indexOf(a)>-1);
+    if(!!a&&a===b)return true;
+    // a real Tube / Elizabeth line stop (ids starting 940G) whose name starts the same way; piers (930G), bus stops and street addresses don't qualify
+    return /^940G/.test(String(point.naptanId||''))&&!!a&&!!b&&(a.indexOf(b)===0||b.indexOf(a)===0);
   }
-  function validJourney(j){
+  // TfL sometimes resolves a station name to something next door (e.g. Blackfriars Pier) and adds a walk to it.
+  // If the Tube part already reaches the station that was picked, drop the extra walk at either end.
+  function trimJourney(j,a,b){
+    var legs=(j.legs||[]).slice();
+    if(legs.length<2)return j;
+    var out=Object.assign({},j),removed=0;
+    while(legs.length>1&&legs[legs.length-1].mode&&legs[legs.length-1].mode.id==='walking'
+          &&!sameStop(legs[legs.length-1].arrivalPoint,toVal,b)&&sameStop(legs[legs.length-2].arrivalPoint,toVal,b)){
+      removed+=legs.pop().duration||0;
+      out.arrivalDateTime=legs[legs.length-1].arrivalTime||out.arrivalDateTime;
+    }
+    while(legs.length>1&&legs[0].mode&&legs[0].mode.id==='walking'
+          &&!sameStop(legs[0].departurePoint,fromVal,a)&&sameStop(legs[1].departurePoint,fromVal,a)){
+      removed+=legs.shift().duration||0;
+      out.startDateTime=legs[0].departureTime||out.startDateTime;
+    }
+    out.legs=legs;
+    if(removed&&out.duration)out.duration=Math.max(1,out.duration-removed);
+    return out;
+  }
+  var rejectedInfo='';
+  function describeJourney(j){
+    if(!j||!j.legs||!j.legs.length)return '';
+    var legs=j.legs,modes=[];
+    legs.forEach(function(l){var m=l.mode&&l.mode.id;if(m&&modes.indexOf(m)===-1)modes.push(m);});
+    var f=legs[0].departurePoint&&legs[0].departurePoint.commonName,t=legs[legs.length-1].arrivalPoint&&legs[legs.length-1].arrivalPoint.commonName;
+    return (f||'?')+' to '+(t||'?')+' ('+modes.join(', ')+')';
+  }
+  function validJourney(j,a,b){
     var legs=j.legs||[];
     if(!legs.length)return false;
     for(var k=0;k<legs.length;k++){
       var m=legs[k].mode&&legs[k].mode.id;
       if(OK_MODES.indexOf(m)===-1)return false;
     }
-    return sameStop(legs[0].departurePoint,fromVal)&&sameStop(legs[legs.length-1].arrivalPoint,toVal);
+    return sameStop(legs[0].departurePoint,fromVal,a)&&sameStop(legs[legs.length-1].arrivalPoint,toVal,b);
   }
 
   // Try the id sets in order; move on when TfL says it can't find the place or has no route for it.
@@ -821,8 +858,9 @@ function planJourney(){
       var thisV=v;
       v++;if(v>2){v=0;i++;}
       return request(f,t,true,thisV).then(function(d){
-        var ok=(d.journeys||[]).filter(validJourney);
+        var ok=(d.journeys||[]).map(function(j){return trimJourney(j,a,b);}).filter(function(j){return validJourney(j,a,b);});
         if(ok.length){d.journeys=ok;variantUsed=thisV;return d;}
+        if(!rejectedInfo)rejectedInfo=describeJourney((d.journeys||[])[0]);
         lastData={journeys:[]};return next();
       },function(e){
         if(e.status===404||e.status===400){lastErr=e;return next();}
@@ -837,9 +875,11 @@ function planJourney(){
     .then(function(data){
       hideLoading();
       if(!data.journeys||!data.journeys.length){
-        showError('TfL did not return a Tube route between those two stations. Try different stations or another time.');
+        showError('TfL did not return a Tube route between those two stations.'+(rejectedInfo?' It offered: '+rejectedInfo+', which does not fit.':'')+' Try different stations or another time.');
         return;
       }
+      // shortest journey first, then the next fastest
+      data.journeys.sort(function(x,y){return ((x.duration||0)-(y.duration||0))||String(x.arrivalDateTime).localeCompare(String(y.arrivalDateTime));});
       currentJourneys=data.journeys.slice(0,3);
       activeTab=0;
       renderResults(fromVal,toVal);
@@ -888,7 +928,7 @@ function renderTabs(){
     var arr=fmtTime(j.arrivalDateTime);
     var d=document.createElement('div');
     d.className='jtab'+(i===activeTab?' active':'');
-    d.innerHTML='<span class="jtab-time">'+dur+' min</span>'
+    d.innerHTML=(i===0&&currentJourneys.length>1?'<span class="jtab-tag">Fastest</span>':'')+'<span class="jtab-time">'+dur+' min</span>'
       +'<span style="font-size:10px;letter-spacing:1px;">'+dep+' → '+arr+'</span>';
     (function(idx){d.addEventListener('click',function(){activeTab=idx;renderTabs();renderActiveJourney();});})(i);
     tabs.appendChild(d);
@@ -981,7 +1021,7 @@ function renderActiveJourney(){
     if(mode!=='walking'){
       var dir=leg.instruction&&leg.instruction.detailed?leg.instruction.detailed:'';
       if(dir)html+='<div class="step-sub" style="color:var(--text-dim);font-size:10px;margin-top:2px;">'+escH(dir)+'</div>';
-      html+='<span class="step-pill" style="'+pillStyle+'">&#x25CF; '+escH((lineLbl||'Rail'))+'</span>';
+      html+='<span class="step-pill" style="'+pillStyle+'">&#x25CF; '+escH((lineLbl||'Tube'))+'</span>';
     } else {
       html+='<span class="step-pill" style="background:rgba(94,227,161,.08);color:var(--text-mid);border:1px solid var(--border2);">&#x1F6B6; Walk '+leg.duration+' min</span>';
     }
@@ -1002,11 +1042,6 @@ function renderActiveJourney(){
   });
 
   html+='</div>';
-
-  html+='<div class="disclaimer">'
-    +'* '+fmtTime(j.startDateTime)+' dep &nbsp;|&nbsp; '+fmtTime(j.arrivalDateTime)+' arr'
-    +' &nbsp;|&nbsp; data via TfL Unified API &nbsp;|&nbsp; always verify with Citymapper'
-    +'</div>';
 
   document.getElementById('journey-detail').innerHTML=html;
 }
