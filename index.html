@@ -44,31 +44,32 @@ nav{position:sticky;top:14px;z-index:100;max-width:1120px;margin:14px auto 0;pad
 .nav-right a.cta:hover .arr{transform:translateX(5px) rotate(-45deg) scale(1.12)}
 
 /* hero */
-.hero{max-width:1120px;margin:0 auto;padding:80px 24px 48px}
-.badge{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 14px 6px 10px;font-size:13px;font-weight:500;color:var(--mut);margin-bottom:26px}
+.hero{max-width:1120px;margin:0 auto;padding:44px 24px 32px}
+.hero-row{display:flex;align-items:flex-end;justify-content:space-between;gap:24px 48px;flex-wrap:wrap}
+.hero-side{max-width:340px;padding-bottom:10px}
+.badge{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 14px 6px 10px;font-size:13px;font-weight:500;color:var(--mut);margin-bottom:18px}
 .badge::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 4px rgba(94,227,161,.2)}
-.hero h1{font-family:var(--disp);font-weight:700;font-size:clamp(72px,16vw,176px);line-height:.95;letter-spacing:-.06em}
+.hero h1{font-family:var(--disp);font-weight:700;font-size:clamp(64px,11vw,120px);line-height:.95;letter-spacing:-.06em}
 .hero h1 .l{display:inline-block;animation:letterIn .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*90ms)}
 .hero h1 .dot{color:var(--blue);display:inline-block;animation:letterIn .7s cubic-bezier(.2,.8,.2,1) 360ms both,blink 1.2s 1.2s infinite}
-.hero p{margin-top:24px;max-width:50ch;color:var(--mut);font-size:17px;line-height:1.6}
-.beta-btn{display:inline-flex;align-items:center;gap:10px;margin-top:28px;padding:10px 10px 10px 22px;border:1px solid var(--line);border-radius:999px;font:600 14px var(--disp);color:var(--ink2);transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s,border-color .2s,color .2s}
+.hero p{color:var(--mut);font-size:16px;line-height:1.55}
+.beta-btn{display:inline-flex;align-items:center;gap:10px;margin-top:18px;padding:8px 8px 8px 20px;border:1px solid var(--line);border-radius:999px;font:600 14px var(--disp);color:var(--ink2);transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s,border-color .2s,color .2s}
 .beta-btn .arr{background:var(--card2);color:var(--blue)}
 .beta-btn:hover{border-color:var(--blue);color:var(--blue);transform:translateY(-3px);box-shadow:0 10px 24px rgba(94,227,161,.2)}
 .beta-btn:hover .arr{transform:translateX(5px) rotate(-45deg) scale(1.12)}
 
-/* projects */
-.projects{max-width:1120px;margin:0 auto;padding:0 24px 24px;display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
-.project{grid-column:span 2;position:relative;min-height:240px;padding:26px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;animation:projectIn .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*110ms + 300ms);transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .25s,background .25s,box-shadow .35s}
-.project:nth-child(n+4){grid-column:span 3}
+/* projects: every card is the same square; rows wrap and centre however many there are */
+.projects{max-width:1120px;margin:0 auto;padding:0 24px 24px;display:flex;flex-wrap:wrap;justify-content:center;gap:16px}
+.project{flex:0 0 250px;width:250px;aspect-ratio:1/1;position:relative;padding:24px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;animation:projectIn .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*110ms + 300ms);transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .25s,background .25s,box-shadow .35s}
 .project::before{content:'';position:absolute;width:300px;height:300px;right:-120px;top:-160px;border-radius:50%;background:radial-gradient(circle,rgba(94,227,161,.22),transparent 65%);opacity:0;transition:opacity .35s;pointer-events:none}
 .project:hover{transform:translateY(-6px);border-color:var(--blue);background:var(--card2);box-shadow:0 18px 40px rgba(94,227,161,.12)}
 .project:hover::before{opacity:1}
-.project-icon{width:60px;height:60px;border-radius:20px;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;font-size:30px;line-height:1;position:relative}
-.project-badge{position:absolute;top:24px;right:24px;font-size:12px;font-weight:600;padding:5px 12px;border-radius:999px;color:var(--blue);background:var(--blue-soft)}
+.project-icon{width:54px;height:54px;border-radius:18px;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;font-size:27px;line-height:1;position:relative}
+.project-badge{position:absolute;top:22px;right:22px;font-size:12px;font-weight:600;padding:5px 12px;border-radius:999px;color:var(--blue);background:var(--blue-soft)}
 .project-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;position:relative}
-.project-name{font-family:var(--disp);font-size:24px;font-weight:700;letter-spacing:-.03em;line-height:1.15}
-.project-desc{margin-top:6px;font-size:14px;color:var(--mut);line-height:1.45}
-.project .arr{width:42px;height:42px;font-size:17px;background:var(--card2);color:var(--blue);transition:transform .35s cubic-bezier(.2,.8,.2,1),background .2s,color .2s}
+.project-name{font-family:var(--disp);font-size:21px;font-weight:700;letter-spacing:-.03em;line-height:1.15}
+.project-desc{margin-top:4px;font-size:13px;color:var(--mut);line-height:1.45}
+.project .arr{width:38px;height:38px;font-size:16px;background:var(--card2);color:var(--blue);transition:transform .35s cubic-bezier(.2,.8,.2,1),background .2s,color .2s}
 .project:hover .arr{background:var(--blue);color:var(--onacc);transform:translateX(4px) rotate(-45deg) scale(1.12)}
 .project:active{transform:translateY(-2px) scale(.99)}
 
@@ -83,12 +84,10 @@ footer{max-width:1120px;margin:24px auto 0;padding:28px 24px 40px;border-top:1px
 .discord-fab:hover{background:var(--accHi);transform:translateY(-6px) scale(1.12) rotate(-8deg);box-shadow:0 14px 30px rgba(94,227,161,.45)}
 .discord-fab:active{transform:scale(.95)}
 
-@media(max-width:900px){.project,.project:nth-child(n+4){grid-column:span 3}.project:nth-child(5){grid-column:1/-1}}
 @media(max-width:620px){
-  .hero{padding-top:56px}
+  .hero{padding-top:32px}
   .nav-right a:not(.cta){display:none}
-  .projects{grid-template-columns:1fr}
-  .project,.project:nth-child(n+4),.project:nth-child(5){grid-column:auto;min-height:200px}
+  .project{flex-basis:min(100%,320px);width:min(100%,320px)}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
@@ -100,21 +99,24 @@ footer{max-width:1120px;margin:24px auto 0;padding:28px 24px 40px;border-top:1px
 <nav>
   <a class="logo" href="https://ilan.bloxxer.dev">ILAN<span>.BLOXXER.DEV</span></a>
   <div class="nav-right">
-    <a href="https://discord.gg/vfW7kdccHK" target="_blank" rel="noopener">Discord</a>
-    <a class="cta" href="/github/index.html">GitHub <span class="arr">&rarr;</span></a>
+    <a class="cta" href="https://github.com/II-Dragon14" target="_blank" rel="noopener">GitHub <span class="arr">&rarr;</span></a>
   </div>
 </nav>
 
 <main>
   <header class="hero">
     <div class="badge">Personal projects</div>
-    <h1><span class="l" style="--i:0">I</span><span class="l" style="--i:1">l</span><span class="l" style="--i:2">a</span><span class="l" style="--i:3">n</span><span class="dot">.</span></h1>
-    <p>Select a project below to launch it.</p>
-    <a class="beta-btn" href="https://beta-ilan.bloxxer.dev">Try the new version <span class="arr">&rarr;</span></a>
+    <div class="hero-row">
+      <h1><span class="l" style="--i:0">I</span><span class="l" style="--i:1">l</span><span class="l" style="--i:2">a</span><span class="l" style="--i:3">n</span><span class="dot">.</span></h1>
+      <div class="hero-side">
+        <p>Select a project below to launch it.</p>
+        <a class="beta-btn" href="https://beta-ilan.bloxxer.dev">Try the new version <span class="arr">&rarr;</span></a>
+      </div>
+    </div>
   </header>
 
   <section class="projects" aria-label="Projects">
-    <a class="project" style="--i:0" href="/sky-watch/index.html" title="Live weather and sky conditions">
+    <a class="project" href="/sky-watch/index.html" title="Live weather and sky conditions">
       <span class="project-badge">New</span>
       <div class="project-icon">🌤️</div>
       <div class="project-foot">
@@ -123,7 +125,7 @@ footer{max-width:1120px;margin:24px auto 0;padding:28px 24px 40px;border-top:1px
       </div>
     </a>
 
-    <a class="project" style="--i:1" href="/tube-route/index.html" title="Plan any London tube journey live">
+    <a class="project" href="/tube-route/index.html" title="Plan any London tube journey live">
       <div class="project-icon">🚇</div>
       <div class="project-foot">
         <div><div class="project-name">Tube-Route</div><div class="project-desc">Live tube journey planner</div></div>
@@ -131,27 +133,19 @@ footer{max-width:1120px;margin:24px auto 0;padding:28px 24px 40px;border-top:1px
       </div>
     </a>
 
-    <a class="project" style="--i:2" href="/cipher/index.html" title="Encode and decode messages with classic ciphers">
+    <a class="project" href="/cipher/index.html" title="Encode and decode messages with classic ciphers">
       <div class="project-icon">🔐</div>
       <div class="project-foot">
-        <div><div class="project-name">Cipher</div><div class="project-desc">Encode and decode with classic ciphers</div></div>
+        <div><div class="project-name">Cipher</div><div class="project-desc">Encode and decode ciphers</div></div>
         <span class="arr">&rarr;</span>
       </div>
     </a>
 
-    <a class="project" style="--i:3" href="/suburani/index.html" title="Latin vocabulary quizzes for Suburani Book 1">
+    <a class="project" href="/vocab" title="Latin vocabulary quizzes for Suburani Book 1">
       <span class="project-badge">New</span>
       <div class="project-icon">🏛️</div>
       <div class="project-foot">
-        <div><div class="project-name">Suburani vocab</div><div class="project-desc">Latin vocabulary tester for Suburani Book 1</div></div>
-        <span class="arr">&rarr;</span>
-      </div>
-    </a>
-
-    <a class="project" style="--i:4" href="/github/index.html" title="View my GitHub profile">
-      <div class="project-icon">🐱</div>
-      <div class="project-foot">
-        <div><div class="project-name">GitHub profile</div><div class="project-desc">View my GitHub profile and projects</div></div>
+        <div><div class="project-name">Suburani vocab</div><div class="project-desc">Latin vocabulary tester</div></div>
         <span class="arr">&rarr;</span>
       </div>
     </a>
@@ -169,6 +163,8 @@ footer{max-width:1120px;margin:24px auto 0;padding:28px 24px 40px;border-top:1px
 </a>
 
 <script>
+// number the cards so new ones animate in order without editing anything
+document.querySelectorAll('.project').forEach(function(c,i){c.style.setProperty('--i',i);});
 (function(){
   var o=document.getElementById('cursor-outer');
   if(!o)return;
