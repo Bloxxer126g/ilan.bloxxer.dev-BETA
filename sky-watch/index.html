@@ -298,9 +298,8 @@ footer{max-width:1120px;margin:24px auto 0;padding:28px 24px 40px;border-top:1px
 (function(){
   var o=document.getElementById('cursor-outer'),i=document.getElementById('cursor-inner');
   if(!o||!i)return;
-  var mx=0,my=0,ox=0,oy=0;
-  document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;i.style.left=mx+'px';i.style.top=my+'px';});
-  (function a(){ox+=(mx-ox)*.12;oy+=(my-oy)*.12;o.style.left=Math.round(ox*10)/10+'px';o.style.top=Math.round(oy*10)/10+'px';requestAnimationFrame(a);})();
+  // the dot follows the mouse exactly: no smoothing, so there is no lag
+  document.addEventListener('mousemove',function(e){o.style.left=e.clientX+'px';o.style.top=e.clientY+'px';});
   var GREEN='a.cta,.btn-plan,.discord-fab,.hour.now,.scroll-btn:not(:disabled):hover';
   document.addEventListener('mouseover',function(e){document.body.classList.toggle('cg',!!e.target.closest(GREEN));});
   document.addEventListener('mouseleave',function(){document.body.classList.remove('cg');});
